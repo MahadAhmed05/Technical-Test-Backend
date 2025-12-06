@@ -1,100 +1,159 @@
-Weather Decision App - Backend
-A Node.js backend service that fetches weather data from the Meteonomiqs API and determines if weather conditions are "good" or "bad" based on predefined criteria.
-Features
+# Weather Decision API Backend
 
-Fetches real-time weather data using Meteonomiqs Forecast API
-Implements decision logic based on weather conditions and temperature
-RESTful API endpoint for weather decisions
-Monthly temperature threshold logic
+A Node.js/Express backend service that fetches weather data and makes decisions based on temperature thresholds and weather conditions.
 
-Prerequisites
+## Features
 
-Node.js (v14 or higher)
-npm or yarn
+- 🌤️ Fetches real-time weather data from external API
+- 📊 Makes decisions based on monthly temperature thresholds
+- 🌍 Supports German and English weather condition mapping
+- 🔒 Secure API key handling via environment variables or headers
+- ⚡ Built with Express.js and ES modules
 
-Installation
+## Prerequisites
 
-Clone the repository:
+- Node.js (v18 or higher recommended)
+- npm or yarn
 
-bashgit clone <your-backend-repo-url>
-cd weather-decision-backend
+## Installation
 
-Install dependencies:
+1. Clone the repository and navigate to the Backend directory:
 
-bashnpm install
-
-Create a .env file in the root directory:
-
-bashcp .env.example .env
+```bash
+cd Backend
 ```
 
-4. Add your Meteonomiqs API key to `.env`:
+2. Install dependencies:
+
+```bash
+npm install
 ```
-METEONOMIQS_API_KEY=your_api_key_here
+
+3. Create a `.env` file in the Backend directory:
+
+```env
+WEATHER_API_KEY=your_api_key_here
 PORT=4000
-Running the Application
-Development mode:
-bashnpm run dev
-Production mode:
-bashnpm start
 ```
 
-The server will start on `http://localhost:5000`
+## Running the Server
 
-## API Endpoint
+Start the development server:
+
+```bash
+npm start
+```
+
+The server will start on `http://localhost:4000` (or the port specified in your `.env` file).
+
+## API Endpoints
+
+### Health Check
+
+```
+GET /
+```
+
+Returns: `Server working ✔`
 
 ### Get Weather Decision
+
 ```
-GET /api/weather-decision?lat={latitude}&lon={longitude}
-Parameters:
+GET /api/v1/weather/get-weather?lat={latitude}&lon={longitude}
+```
 
-lat (required): Latitude coordinate
-lon (required): Longitude coordinate
+**Query Parameters:**
 
-Example Request:
-bashcurl "http://localhost:5000/api/weather-decision?lat=48.1663&lon=11.5683"
-Example Response:
-json{
-  "weatherCondition": "Sunny",
-  "temperature": 17.5,
-  "monthThreshold": 12,
-  "decision": "good"
+- `lat` (required): Latitude coordinate
+- `lon` (required): Longitude coordinate
+
+**Headers (optional):**
+
+- `x-api-key`: Weather API key (if not set in .env)
+
+**Example Request:**
+
+```bash
+GET http://localhost:4000/api/v1/weather/get-weather?lat=48.1663&lon=11.5683
+```
+
+**Example Response:**
+
+```json
+{
+  "temperature": 7,
+  "rawCondition": "Stark bewölkt",
+  "simplifiedCondition": "cloudy",
+  "month": 12,
+  "threshold": 16,
+  "decision": "bad"
 }
 ```
 
+**Response Fields:**
+
+- `temperature`: Current temperature in °C
+- `rawCondition`: Original weather condition text from API
+- `simplifiedCondition`: Mapped condition (sunny, cloudy, rainy, stormy, unknown)
+- `month`: Current month (1-12)
+- `threshold`: Temperature threshold for the current month
+- `decision`: "good" or "bad" based on temperature and weather conditions
+
 ## Decision Logic
 
-The app evaluates weather conditions based on:
-- Weather condition (Sunny, Cloudy, Rainy, etc.)
-- Current temperature
-- Monthly temperature thresholds
-- Specific rules for different weather patterns
+The API returns "good" if:
 
-**Basic Rules:**
-- Sunny/Clear: Good if temperature ≥ monthly threshold
-- Cloudy: Good if temperature ≥ 15°C
-- Rain: Generally bad
-- Snow: Good in winter if temperature ≤ threshold
-- Fog/Storm: Always bad
+- Temperature is above or equal to the monthly threshold
+- Weather condition is NOT rainy or stormy
+
+Otherwise, it returns "bad".
 
 ## Project Structure
+
 ```
-├── src/
-│   ├── controllers/     # Request handlers
-│   ├── services/        # Business logic
-│   ├── utils/          # Helper functions
-│   └── routes/         # API routes
-├── .env.example        # Environment variables template
-├── package.json
-└── README.md
-Environment Variables
+Backend/
+├── config/          # Configuration files (database, etc.)
+├── controllers/     # Request handlers
+├── data/            # Data files (thresholds, etc.)
+├── routes/          # API route definitions
+├── utils/           # Utility functions
+├── index.js         # Main server file
+└── package.json     # Dependencies
+```
 
-METEONOMIQS_API_KEY: Your Meteonomiqs API key
-PORT: Server port (default: 4000)
+## Environment Variables
 
-Technologies Used
+| Variable          | Description                 | Required |
+| ----------------- | --------------------------- | -------- |
+| `WEATHER_API_KEY` | API key for weather service | Yes      |
+| `PORT`            | Server port (default: 3000) | No       |
 
-Node.js
-Express.js
-Axios (for API calls)
-dotenv (for environment variables)
+## Dependencies
+
+- **express**: Web framework
+- **cors**: Cross-origin resource sharing
+- **morgan**: HTTP request logger
+- **dotenv**: Environment variable management
+- **node-fetch**: HTTP client for API requests
+
+## Error Handling
+
+The API includes comprehensive error handling:
+
+- Missing or invalid coordinates (400)
+- API key not set (500)
+- External API errors (500)
+- Request timeouts (15 seconds)
+
+## Development
+
+The server uses ES modules (`type: "module"` in package.json) and includes:
+
+- Request logging with Morgan
+- CORS enabled for cross-origin requests
+- Graceful error handling
+- Request timeout protection
+
+## License
+
+ISC
